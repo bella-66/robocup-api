@@ -26,7 +26,7 @@ app.use("/osoba", apiRouterOsoba);
 app.use("/event", apiRouterEvent);
 app.use("/organization", apiRouterOrganization);
 
-const PORT = 3000;
+// const PORT = 3000;
 app.listen(() => {
   console.log("Server is running");
 });
