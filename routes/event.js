@@ -4,7 +4,17 @@ const router = express.Router();
 
 router.get("/", async (req, res, next) => {
   try {
-    let results = await db.getAllEvents(req, res);
+    let results = await db.getUpcomingEvents(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.get("/past", async (req, res, next) => {
+  try {
+    let results = await db.getPastEvents(req, res);
     return results;
   } catch (e) {
     console.log(e);
@@ -45,6 +55,36 @@ router.delete("/:id", async (req, res, next) => {
 router.get("/admin/:id", async (req, res, next) => {
   try {
     let results = await db.getEventById(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.get("/realizator", async (req, res, next) => {
+  try {
+    let results = await db.getRealizator(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.get("/osoby", async (req, res, next) => {
+  try {
+    let results = await db.getEventOsoby(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.get("/number", async (req, res, next) => {
+  try {
+    let results = await db.getNOEvents(req, res);
     return results;
   } catch (e) {
     console.log(e);

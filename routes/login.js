@@ -11,6 +11,15 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.put("/", async (req, res) => {
+  try {
+    let results = await db.updateProfile(req, res);
+    return results;
+  } catch (e) {
+    // res.status(500);
+  }
+});
+
 router.post("/tim", async (req, res) => {
   try {
     let results = await db.tim(req, res);
@@ -45,6 +54,16 @@ router.post("/profile", async (req, res) => {
     let results = await db.profile(req, res);
     return results;
   } catch (e) {
+    // res.status(500);
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    let results = await db.vysledky(req, res);
+    return results;
+  } catch (e) {
+    // console.log(e);
     // res.status(500);
   }
 });
