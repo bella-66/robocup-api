@@ -12,6 +12,16 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/all", async (req, res, next) => {
+  try {
+    let results = await db.getAllEvents(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
 router.get("/past", async (req, res, next) => {
   try {
     let results = await db.getPastEvents(req, res);

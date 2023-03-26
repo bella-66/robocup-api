@@ -2,6 +2,16 @@ const express = require("express");
 const db = require("../db");
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  try {
+    let results = await db.getAllResults(req, res);
+    return results;
+  } catch (e) {
+    // console.log(e);
+    // res.status(500);
+  }
+});
+
 router.get("/resultsByComp", async (req, res) => {
   try {
     let results = await db.getResultsByComp(req, res);
