@@ -27,8 +27,8 @@ app.use("/osoba", apiRouterOsoba);
 app.use("/event", apiRouterEvent);
 app.use("/organization", apiRouterOrganization);
 
-const PORTAPI = process.env.PORTAPI || 3030;
+const PORT = process.env.PORT || 3030;
 
-app.listen(PORTAPI, () => {
-  console.log("Server is running");
+app.listen(PORT, () => {
+  console.log("Server is running at port " + PORT);
 });
