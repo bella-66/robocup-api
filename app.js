@@ -10,6 +10,7 @@ const apiRouterOsoba = require("./routes/osoba");
 const apiRouterEvent = require("./routes/event");
 const apiRouterOrganization = require("./routes/organization");
 const db = require("./db");
+require("dotenv").config();
 
 const app = express();
 
@@ -26,7 +27,8 @@ app.use("/osoba", apiRouterOsoba);
 app.use("/event", apiRouterEvent);
 app.use("/organization", apiRouterOrganization);
 
-// const PORT = 3000;
-app.listen(() => {
+const PORT = process.env.PORT || 3030;
+
+app.listen(PORT, () => {
   console.log("Server is running");
 });
