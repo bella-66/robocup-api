@@ -49,6 +49,20 @@ robocupdb.getIdTimeline = async (req, res) => {
   }
 };
 
+robocupdb.getTimeline = async (req, res) => {
+  try {
+    const id_sutaz = req.params.id;
+    const [results] = await pool.query(
+      `SELECT timeline.*,(select tim.nazov from tim where tim.id_tim=timeline.id_tim_1) as nazov_tim1, (select tim.nazov from tim where tim.id_tim = timeline.id_tim_2) as nazov_tim2 
+      FROM timeline left join sutaz on timeline.id_sutaz=sutaz.id_sutaz where (timeline.id_timeline not in (SELECT vysledky.id_timeline from vysledky) 
+      AND timeline.druh_operacie!='Results announcement' AND timeline.druh_operacie!='Meeting') AND timeline.id_sutaz='${id_sutaz}';`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
 robocupdb.getIdZapisujucaOsoba = async (req, res) => {
   try {
     const [results] = await pool.query(
@@ -64,10 +78,10 @@ robocupdb.vysledky = async (req, res) => {
   try {
     const id_sutaz = req.params.id;
     const [results] = await pool.query(
-      `SELECT (select tim.nazov from tim where timeline.id_tim_1 = tim.id_tim) as tim1, (select tim.nazov from tim where timeline.id_tim_2 = tim.id_tim) as tim2, 
-      vysledky.id_timeline, vysledky.datum_zapisu, vysledky.vysledok_1, vysledky.vysledok_2, osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas, timeline.druh_operacie, 
-      sutaz.nazov FROM vysledky inner join osoba on vysledky.id_zapisujuca_osoba = osoba.id_osoba inner join timeline on vysledky.id_timeline = timeline.id_timeline INNER JOIN 
-      sutaz on timeline.id_sutaz = sutaz.id_sutaz where timeline.druh_operacie != 'Results announcement' AND sutaz.id_sutaz=${id_sutaz} order by timeline.datum_a_cas desc;`
+      `SELECT (select tim.nazov from tim where timeline.id_tim_1 = tim.id_tim) as tim1, (select tim.nazov from tim where timeline.id_tim_2 = tim.id_tim) as tim2,vysledky.id_zapisujuca_osoba, 
+      vysledky.id_timeline,vysledky.datum_zapisu,vysledky.vysledok_1,vysledky.vysledok_2,osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie, 
+      sutaz.nazov FROM vysledky inner join osoba on vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline=timeline.id_timeline INNER JOIN 
+      sutaz on timeline.id_sutaz=sutaz.id_sutaz where timeline.druh_operacie!='Results announcement' AND sutaz.id_sutaz=${id_sutaz} order by timeline.datum_a_cas desc;`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -657,10 +671,9 @@ robocupdb.updateOrganization = async (req, res, next) => {
 robocupdb.updateResult = async (req, res, next) => {
   try {
     const { id_timeline, vysledok_1, vysledok_2 } = req.body.inputs;
-    const { id_timeline_old } = req.body;
     const results = await pool.query(
-      "UPDATE vysledky SET id_timeline=?,vysledok_1=?,vysledok_2=? WHERE id_timeline=?;",
-      [id_timeline, vysledok_1, vysledok_2, id_timeline_old]
+      "UPDATE vysledky SET vysledok_1=?,vysledok_2=? WHERE id_timeline=?;",
+      [vysledok_1, vysledok_2, id_timeline]
     );
     return res.status(200).json();
   } catch (error) {
@@ -760,10 +773,9 @@ robocupdb.getResultsByTeam = async (req, res) => {
   try {
     const { id_tim } = req.body;
     const [results] = await pool.query(
-      // `SELECT vysledky.id_timeline, vysledky.datum_zapisu, vysledky.vysledok_1, vysledky.vysledok_2, timeline.druh_operacie, timeline.datum_a_cas FROM vysledky inner join
-      //  timeline on vysledky.id_timeline = timeline.id_timeline inner join tim_sutaz on timeline.id_sutaz = tim_sutaz.id_sutaz where timeline.druh_operacie != 'Results announcement' AND tim_sutaz.id_tim = '${id_tim}';`
-      `SELECT vysledky.id_timeline, vysledky.datum_zapisu, vysledky.vysledok_1, vysledky.vysledok_2, timeline.druh_operacie, timeline.datum_a_cas, sutaz.nazov FROM vysledky inner join timeline 
-      on vysledky.id_timeline = timeline.id_timeline inner join sutaz on timeline.id_sutaz = sutaz.id_sutaz where timeline.druh_operacie != 'Results announcement' AND timeline.id_tim_1 = '${id_tim}' or timeline.id_tim_2 = '${id_tim}';`
+      `SELECT (select tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1,(select tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2,vysledky.id_timeline,vysledky.datum_zapisu,vysledky.vysledok_1,vysledky.vysledok_2, 
+      osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov FROM vysledky inner join osoba on vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline=timeline.id_timeline 
+      INNER JOIN sutaz on timeline.id_sutaz=sutaz.id_sutaz where timeline.id_tim_1='${id_tim}' or timeline.id_tim_2='${id_tim}' order by timeline.datum_a_cas desc;`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -774,7 +786,7 @@ robocupdb.getResultsByTeam = async (req, res) => {
 robocupdb.getUpcomingEvents = async (req, res) => {
   try {
     const [results] = await pool.query(
-      "SELECT event.*, organizacia.druh, organizacia.nazov as organizaciaNazov, organizacia.stat FROM event inner join organizacia on event.id_realizator = organizacia.id_organizacia where event.datum_od>=CURRENT_DATE() order by event.datum_od DESC;"
+      "SELECT event.*, organizacia.druh, organizacia.nazov as organizaciaNazov, organizacia.stat FROM event inner join organizacia on event.id_realizator = organizacia.id_organizacia where event.datum_od>=CURRENT_DATE() order by event.datum_od DESC LIMIT 12;"
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -785,7 +797,7 @@ robocupdb.getUpcomingEvents = async (req, res) => {
 robocupdb.getPastEvents = async (req, res) => {
   try {
     const [results] = await pool.query(
-      "SELECT event.*, organizacia.druh, organizacia.nazov as organizaciaNazov, organizacia.stat FROM event inner join organizacia on event.id_realizator = organizacia.id_organizacia where event.datum_od<CURRENT_DATE() order by event.datum_od DESC;"
+      "SELECT event.*, organizacia.druh, organizacia.nazov as organizaciaNazov, organizacia.stat FROM event inner join organizacia on event.id_realizator = organizacia.id_organizacia where event.datum_od<CURRENT_DATE() order by event.datum_od DESC LIMIT 12;"
     );
     return res.status(200).json(results);
   } catch (error) {

@@ -42,6 +42,16 @@ router.get("/idtimeline", async (req, res) => {
   }
 });
 
+router.get("/resultTimeline/:id", async (req, res) => {
+  try {
+    let results = await db.getTimeline(req, res);
+    return results;
+  } catch (e) {
+    // console.log(e);
+    // res.status(500);
+  }
+});
+
 router.get("/idosoba", async (req, res) => {
   try {
     let results = await db.getIdZapisujucaOsoba(req, res);
