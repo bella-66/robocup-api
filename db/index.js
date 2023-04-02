@@ -100,6 +100,57 @@ robocupdb.getResultsByComp = async (req, res) => {
   }
 };
 
+robocupdb.getUserTeamComps = async (req, res) => {
+  try {
+    const id_tim = req.params.id;
+    const [results] = await pool.query(
+      `SELECT sutaz.nazov,sutaz.id_sutaz FROM sutaz inner join timeline on sutaz.id_sutaz=timeline.id_sutaz inner join vysledky on timeline.id_timeline=vysledky.id_timeline
+      inner join tim on timeline.id_tim_1=tim.id_tim or timeline.id_tim_2=tim.id_tim where tim.id_tim='${id_tim}' group by sutaz.id_sutaz ORDER by timeline.datum_a_cas desc;`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.updateTeamComp = async (req, res) => {
+  try {
+    const { id_tim, id_sutaz } = req.body;
+    const [results] = await pool.query(
+      "INSERT INTO tim_sutaz(id_tim,id_sutaz) VALUES (?,?);",
+      [id_tim, id_sutaz]
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.deleteTeamComp = async (req, res) => {
+  try {
+    const { id_tim, id_sutaz } = req.body;
+    const [results] = await pool.query(
+      `DELETE from tim_sutaz where id_tim='${id_tim}' AND id_sutaz='${id_sutaz}';`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.addTeamComp = async (req, res) => {
+  try {
+    const { id_tim, sutazValue } = req.body;
+    const [results] = await pool.query(
+      "INSERT INTO tim_sutaz(id_tim,id_sutaz) VALUES (?,?);",
+      [id_tim, sutazValue]
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
 robocupdb.addResult = async (req, res, next) => {
   try {
     const {
@@ -139,15 +190,35 @@ robocupdb.addTimeline = async (req, res, next) => {
       "INSERT INTO timeline (datum_a_cas,druh_operacie,id_sutaz,id_tim_1,id_tim_2) VALUES(?,?,?,?,?);",
       [datum_a_cas, druh_operacie, id_sutaz, id_tim_1, id_tim_2]
     );
-    const result = await pool.query(
-      "INSERT INTO tim_sutaz(id_tim, id_sutaz) VALUES(?,?);",
-      [id_tim_1, id_sutaz]
-    );
+
+    if (id_tim_1) {
+      await pool
+        .query(
+          `SELECT * from tim_sutaz where id_tim='${id_tim_1}' AND id_sutaz='${id_sutaz}'`
+        )
+        .then(async (res) => {
+          if (res[0].length === 0) {
+            await pool.query(
+              "INSERT INTO tim_sutaz(id_tim, id_sutaz) VALUES(?,?);",
+              [id_tim_1, id_sutaz]
+            );
+          }
+        });
+    }
+
     if (id_tim_2) {
-      const resul = await pool.query(
-        "INSERT INTO tim_sutaz(id_tim, id_sutaz) VALUES(?,?);",
-        [id_tim_2, id_sutaz]
-      );
+      await pool
+        .query(
+          `SELECT * from tim_sutaz where id_tim='${id_tim_2}' AND id_sutaz='${id_sutaz}'`
+        )
+        .then(async (res) => {
+          if (res[0].length === 0) {
+            await pool.query(
+              "INSERT INTO tim_sutaz(id_tim, id_sutaz) VALUES(?,?);",
+              [id_tim_2, id_sutaz]
+            );
+          }
+        });
     }
     return res.status(200).json(results);
   } catch (error) {
@@ -176,6 +247,46 @@ robocupdb.addOrganization = async (req, res, next) => {
       "INSERT INTO organizacia (druh,nazov,ulica,psc,stat) VALUES(?,?,?,?,?);",
       [druh, nazov, ulica, psc, stat]
     );
+    return res.status(200).json();
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.updateEvent = async (req, res, next) => {
+  try {
+    const {
+      nazov,
+      datum_od,
+      datum_do,
+      charakteristika,
+      id_realizator,
+      id_organizatori,
+      id_osoby,
+    } = req.body.inputs;
+    const { id_event } = req.body;
+    await pool.query(
+      "UPDATE event SET nazov=?,datum_od=?,datum_do=?,charakteristika=?,id_realizator=? WHERE id_event=?;",
+      [nazov, datum_od, datum_do, charakteristika, id_realizator, id_event]
+    );
+    await pool.query(
+      `DELETE from event_organizatori where event_organizatori.id_event='${id_event}';`
+    );
+    await pool.query(
+      `DELETE from event_osoby where event_osoby.id_event='${id_event}';`
+    );
+    for (let i = 0; i < id_organizatori.length; i++) {
+      await pool.query(
+        "INSERT INTO event_organizatori (id_event,id_organizacia) VALUES(?,?);",
+        [id_event, id_organizatori[i]]
+      );
+    }
+    for (let i = 0; i < id_osoby.length; i++) {
+      await pool.query(
+        "INSERT INTO event_osoby (id_osoba,id_event) VALUES(?,?);",
+        [id_osoby[i], id_event]
+      );
+    }
     return res.status(200).json();
   } catch (error) {
     return res.status(500).json(error);
@@ -307,6 +418,18 @@ robocupdb.getCompetitionById = async (req, res) => {
   }
 };
 
+robocupdb.getTeamToComp = async (req, res) => {
+  try {
+    const id_tim = req.params.id;
+    const [results] = await pool.query(
+      `select sutaz.id_sutaz,sutaz.nazov,sutaz.charakteristika from sutaz where id_sutaz NOT IN (SELECT tim_sutaz.id_sutaz from tim_sutaz where tim_sutaz.id_tim='${id_tim}');`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
 robocupdb.getEventById = async (req, res) => {
   try {
     const id_event = req.params.id;
@@ -330,7 +453,7 @@ robocupdb.getAdminTeamById = async (req, res) => {
   try {
     const id_osoba = req.params.id;
     const [results] = await pool.query(
-      `select tim.id_tim from osoba inner join osoba_tim on osoba.id_osoba = osoba_tim.id_osoba inner join tim on osoba_tim.id_tim = tim.id_tim  where osoba.id_osoba = '${id_osoba}';`
+      `select tim.id_tim,tim.nazov from osoba inner join osoba_tim on osoba.id_osoba = osoba_tim.id_osoba inner join tim on osoba_tim.id_tim = tim.id_tim  where osoba.id_osoba = '${id_osoba}';`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -508,7 +631,7 @@ robocupdb.adminCompetition = async (req, res) => {
 robocupdb.adminTimeline = async (req, res) => {
   try {
     const [results] = await pool.query(
-      `SELECT timeline.id_timeline, timeline.datum_a_cas, timeline.druh_operacie, sutaz.nazov, (select tim.nazov from tim where timeline.id_tim_1 = tim.id_tim) as tim1, (select tim.nazov from tim where timeline.id_tim_2 = tim.id_tim) as tim2 FROM timeline inner join sutaz on timeline.id_sutaz = sutaz.id_sutaz order by timeline.datum_a_cas;`
+      `SELECT timeline.id_timeline,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov, (select tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1, (select tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2 FROM timeline inner join sutaz on timeline.id_sutaz=sutaz.id_sutaz order by timeline.datum_a_cas;`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -520,7 +643,19 @@ robocupdb.getTeamById = async (req, res) => {
   const id_tim = req.params.id;
   try {
     const [results] = await pool.query(
-      `select tim.*, organizacia.druh, organizacia.nazov as org_nazov, organizacia.stat from tim inner join organizacia on organizacia.id_organizacia = tim.id_organizacie WHERE tim.id_tim='${id_tim}';`
+      `select tim.*,organizacia.druh,organizacia.nazov as org_nazov,organizacia.stat from tim inner join organizacia on organizacia.id_organizacia=tim.id_organizacie WHERE tim.id_tim='${id_tim}';`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.getTeamCompetitions = async (req, res) => {
+  const id_tim = req.params.id;
+  try {
+    const [results] = await pool.query(
+      `select sutaz.id_sutaz,sutaz.nazov as sutazNazov,sutaz.charakteristika from sutaz inner join tim_sutaz on sutaz.id_sutaz=tim_sutaz.id_sutaz inner join tim on tim_sutaz.id_tim=tim.id_tim WHERE tim.id_tim='${id_tim}';`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -618,8 +753,9 @@ robocupdb.updateUser = async (req, res, next) => {
       rola,
       datum_narodenia,
       organizacia,
+      tim,
     } = req.body[0];
-    const results = await pool.query(
+    await pool.query(
       "UPDATE osoba SET meno=?,priezvisko=?,adresa_domu=?,telefon=?,email=?,rola=?,datum_narodenia=?,id_organizacie=? WHERE id_osoba=?;",
       [
         meno,
@@ -633,6 +769,15 @@ robocupdb.updateUser = async (req, res, next) => {
         id_osoba,
       ]
     );
+    await pool.query(
+      `DELETE from osoba_tim where osoba_tim.id_osoba='${id_osoba}'`
+    );
+    for (let i = 0; i < tim.length; i++) {
+      await pool.query("INSERT INTO osoba_tim (id_osoba,id_tim) VALUES(?,?);", [
+        id_osoba,
+        tim[i],
+      ]);
+    }
     return res.status(200).json({
       id_osoba,
     });
@@ -711,20 +856,6 @@ robocupdb.updateTimeline = async (req, res, next) => {
   }
 };
 
-robocupdb.updateEvent = async (req, res, next) => {
-  try {
-    const { nazov, datum_od, datum_do, charakteristika } = req.body.inputs;
-    const { id_event } = req.body;
-    const results = await pool.query(
-      "UPDATE event SET nazov=?,datum_od=?,datum_do=?,charakteristika=? WHERE id_event=?;",
-      [nazov, datum_od, datum_do, charakteristika, id_event]
-    );
-    return res.status(200).json();
-  } catch (error) {
-    return res.status(500).json(error);
-  }
-};
-
 robocupdb.getNOTeams = async (req, res) => {
   try {
     const [results] = await pool.query(
@@ -771,11 +902,12 @@ robocupdb.getNOEvents = async (req, res) => {
 
 robocupdb.getResultsByTeam = async (req, res) => {
   try {
-    const { id_tim } = req.body;
+    const { id_tim, id_sutaz } = req.body;
     const [results] = await pool.query(
-      `SELECT (select tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1,(select tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2,vysledky.id_timeline,vysledky.datum_zapisu,vysledky.vysledok_1,vysledky.vysledok_2, 
-      osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov FROM vysledky inner join osoba on vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline=timeline.id_timeline 
-      INNER JOIN sutaz on timeline.id_sutaz=sutaz.id_sutaz where timeline.id_tim_1='${id_tim}' or timeline.id_tim_2='${id_tim}' order by timeline.datum_a_cas desc;`
+      `SELECT (select tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1,(select tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2,vysledky.id_timeline,vysledky.datum_zapisu,
+      vysledky.vysledok_1,vysledky.vysledok_2,osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov FROM vysledky inner join osoba on 
+      vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline=timeline.id_timeline INNER JOIN sutaz on timeline.id_sutaz=sutaz.id_sutaz 
+      where (timeline.id_tim_1='${id_tim}' or timeline.id_tim_2='${id_tim}') AND sutaz.id_sutaz='${id_sutaz}' order by timeline.datum_a_cas desc;`
     );
     return res.status(200).json(results);
   } catch (error) {

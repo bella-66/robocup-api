@@ -22,6 +22,16 @@ router.get("/number", async (req, res, next) => {
   }
 });
 
+router.get("/teamToComp/:id", async (req, res, next) => {
+  try {
+    let results = await db.getTeamToComp(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   try {
     let results = await db.addCompetition(req, res);

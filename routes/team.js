@@ -42,12 +42,52 @@ router.get("/admin/:id", async (req, res, next) => {
   }
 });
 
+router.get("/competition/:id", async (req, res, next) => {
+  try {
+    let results = await db.getTeamCompetitions(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
 router.get("/number", async (req, res) => {
   try {
     let results = await db.getNOTeams(req, res);
     return results;
   } catch (e) {
     // console.log(e);
+    // res.status(500);
+  }
+});
+
+router.post("/timSutaz", async (req, res) => {
+  try {
+    let results = await db.addTeamComp(req, res);
+    return results;
+  } catch (e) {
+    // console.log(e);
+    // res.status(500);
+  }
+});
+
+router.put("/timSutaz", async (req, res, next) => {
+  try {
+    let results = await db.updateTeamComp(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.delete("/timSutaz", async (req, res, next) => {
+  try {
+    let results = await db.deleteTeamComp(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
     // res.status(500);
   }
 });

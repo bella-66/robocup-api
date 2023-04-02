@@ -22,6 +22,16 @@ router.get("/resultsByComp", async (req, res) => {
   }
 });
 
+router.get("/userTeamComps/:id", async (req, res) => {
+  try {
+    let results = await db.getUserTeamComps(req, res);
+    return results;
+  } catch (e) {
+    // console.log(e);
+    // res.status(500);
+  }
+});
+
 router.put("/", async (req, res, next) => {
   try {
     let results = await db.updateResult(req, res, next);
