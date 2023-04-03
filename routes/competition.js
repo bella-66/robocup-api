@@ -22,9 +22,29 @@ router.get("/number", async (req, res, next) => {
   }
 });
 
+router.get("/add", async (req, res, next) => {
+  try {
+    let results = await db.getAddResultComps(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
 router.get("/teamToComp/:id", async (req, res, next) => {
   try {
     let results = await db.getTeamToComp(req, res);
+    return results;
+  } catch (e) {
+    console.log(e);
+    // res.status(500);
+  }
+});
+
+router.get("/compToTeam/:id", async (req, res, next) => {
+  try {
+    let results = await db.getCompToTeam(req, res);
     return results;
   } catch (e) {
     console.log(e);

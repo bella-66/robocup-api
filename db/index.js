@@ -151,6 +151,19 @@ robocupdb.addTeamComp = async (req, res) => {
   }
 };
 
+robocupdb.addCompTeam = async (req, res) => {
+  try {
+    const { id_sutaz, teamValue } = req.body;
+    const [results] = await pool.query(
+      "INSERT INTO tim_sutaz(id_tim,id_sutaz) VALUES (?,?);",
+      [teamValue, id_sutaz]
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
 robocupdb.addResult = async (req, res, next) => {
   try {
     const {
@@ -423,6 +436,18 @@ robocupdb.getTeamToComp = async (req, res) => {
     const id_tim = req.params.id;
     const [results] = await pool.query(
       `select sutaz.id_sutaz,sutaz.nazov,sutaz.charakteristika from sutaz where id_sutaz NOT IN (SELECT tim_sutaz.id_sutaz from tim_sutaz where tim_sutaz.id_tim='${id_tim}');`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.getCompToTeam = async (req, res) => {
+  try {
+    const id_sutaz = req.params.id;
+    const [results] = await pool.query(
+      `select tim.*,organizacia.druh,organizacia.nazov as orgNazov from tim inner join organizacia on tim.id_organizacie=organizacia.id_organizacia where tim.id_tim NOT IN (SELECT tim_sutaz.id_tim from tim_sutaz where tim_sutaz.id_sutaz='${id_sutaz}');`
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -963,6 +988,17 @@ robocupdb.getEventOsoby = async (req, res) => {
   try {
     const [results] = await pool.query(
       `SELECT meno,priezvisko, id_osoba FROM osoba where rola = 'Organizer' or rola = 'Volunteer';`
+    );
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+robocupdb.getAddResultComps = async (req, res) => {
+  try {
+    const [results] = await pool.query(
+      "SELECT sutaz.* FROM timeline inner join sutaz on timeline.id_sutaz=sutaz.id_sutaz where (timeline.id_timeline not in (SELECT vysledky.id_timeline from vysledky) AND timeline.druh_operacie!='Results announcement' AND timeline.druh_operacie!='Meeting') group by sutaz.id_sutaz;"
     );
     return res.status(200).json(results);
   } catch (error) {

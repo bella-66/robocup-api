@@ -72,25 +72,35 @@ router.post("/timSutaz", async (req, res) => {
   }
 });
 
-router.put("/timSutaz", async (req, res, next) => {
+router.post("/sutazTim", async (req, res) => {
   try {
-    let results = await db.updateTeamComp(req, res);
+    let results = await db.addCompTeam(req, res);
     return results;
   } catch (e) {
-    console.log(e);
+    // console.log(e);
     // res.status(500);
   }
 });
 
-router.delete("/timSutaz", async (req, res, next) => {
-  try {
-    let results = await db.deleteTeamComp(req, res);
-    return results;
-  } catch (e) {
-    console.log(e);
-    // res.status(500);
-  }
-});
+// router.put("/timSutaz", async (req, res, next) => {
+//   try {
+//     let results = await db.updateTeamComp(req, res);
+//     return results;
+//   } catch (e) {
+//     console.log(e);
+//     // res.status(500);
+//   }
+// });
+
+// router.delete("/timSutaz", async (req, res, next) => {
+//   try {
+//     let results = await db.deleteTeamComp(req, res);
+//     return results;
+//   } catch (e) {
+//     console.log(e);
+//     // res.status(500);
+//   }
+// });
 
 router.delete("/:id", async (req, res, next) => {
   try {
