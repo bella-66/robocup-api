@@ -373,7 +373,7 @@ robocupdb.getTimelineById = async (req, res) => {
 robocupdb.getAllResults = async (req, res) => {
   try {
     const [results] = await pool.query(
-      "SELECT vysledky.*,osoba.meno,osoba.priezvisko,timeline.druh_operacie,timeline.datum_a_cas,sutaz.nazov,(SELECT tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1, (SELECT tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2 FROM vysledky inner join osoba on vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline = timeline.id_timeline inner join sutaz on timeline.id_sutaz=sutaz.id_sutaz;"
+      "SELECT vysledky.*,osoba.meno,osoba.priezvisko,timeline.druh_operacie,timeline.datum_a_cas,sutaz.nazov,(SELECT tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1, (SELECT tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2 FROM vysledky left join osoba on vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline = timeline.id_timeline inner join sutaz on timeline.id_sutaz=sutaz.id_sutaz;"
     );
     return res.status(200).json(results);
   } catch (error) {
@@ -645,7 +645,7 @@ robocupdb.adminOrganization = async (req, res) => {
 robocupdb.adminCompetition = async (req, res) => {
   try {
     const [results] = await pool.query(
-      `SELECT sutaz.*, osoba.meno, osoba.priezvisko FROM sutaz inner join osoba on sutaz.id_hlavny_rozhodca = osoba.id_osoba;`
+      `SELECT sutaz.*, osoba.meno, osoba.priezvisko FROM sutaz left join osoba on sutaz.id_hlavny_rozhodca = osoba.id_osoba;`
     );
     return res.status(200).json(results);
   } catch (error) {
