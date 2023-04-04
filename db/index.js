@@ -987,7 +987,7 @@ robocupdb.getRealizator = async (req, res) => {
 robocupdb.getEventOsoby = async (req, res) => {
   try {
     const [results] = await pool.query(
-      `SELECT meno,priezvisko, id_osoba FROM osoba where rola = 'Organizer' or rola = 'Volunteer';`
+      `SELECT meno,priezvisko,id_osoba FROM osoba where rola != 'Competitor' AND rola!='Administrator';`
     );
     return res.status(200).json(results);
   } catch (error) {
