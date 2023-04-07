@@ -423,7 +423,7 @@ robocupdb.getCompetitionById = async (req, res) => {
   try {
     const id_sutaz = req.params.id;
     const [results] = await pool.query(
-      `SELECT sutaz.*, osoba.meno, osoba.priezvisko FROM sutaz inner join osoba on sutaz.id_hlavny_rozhodca = osoba.id_osoba where id_sutaz = '${id_sutaz}';`
+      `SELECT sutaz.*, osoba.meno, osoba.priezvisko FROM sutaz left join osoba on sutaz.id_hlavny_rozhodca = osoba.id_osoba where id_sutaz = '${id_sutaz}';`
     );
     return res.status(200).json(results);
   } catch (error) {
