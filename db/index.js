@@ -930,7 +930,7 @@ robocupdb.getResultsByTeam = async (req, res) => {
     const { id_tim, id_sutaz } = req.body;
     const [results] = await pool.query(
       `SELECT (select tim.nazov from tim where timeline.id_tim_1=tim.id_tim) as tim1,(select tim.nazov from tim where timeline.id_tim_2=tim.id_tim) as tim2,vysledky.id_timeline,vysledky.datum_zapisu,
-      vysledky.vysledok_1,vysledky.vysledok_2,osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov FROM vysledky inner join osoba on 
+      vysledky.vysledok_1,vysledky.vysledok_2,osoba.meno,osoba.priezvisko,osoba.id_osoba,timeline.datum_a_cas,timeline.druh_operacie,sutaz.nazov FROM vysledky left join osoba on 
       vysledky.id_zapisujuca_osoba=osoba.id_osoba inner join timeline on vysledky.id_timeline=timeline.id_timeline INNER JOIN sutaz on timeline.id_sutaz=sutaz.id_sutaz 
       where (timeline.id_tim_1='${id_tim}' or timeline.id_tim_2='${id_tim}') AND sutaz.id_sutaz='${id_sutaz}' order by timeline.datum_a_cas desc;`
     );
