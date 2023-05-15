@@ -104,8 +104,11 @@ robocupdb.getUserTeamComps = async (req, res) => {
   try {
     const id_tim = req.params.id;
     const [results] = await pool.query(
-      `SELECT sutaz.nazov,sutaz.id_sutaz FROM sutaz inner join timeline on sutaz.id_sutaz=timeline.id_sutaz inner join vysledky on timeline.id_timeline=vysledky.id_timeline
-      inner join tim on timeline.id_tim_1=tim.id_tim or timeline.id_tim_2=tim.id_tim where tim.id_tim='${id_tim}' group by sutaz.id_sutaz ORDER by timeline.datum_a_cas desc;`
+      `SELECT sutaz.nazov,sutaz.id_sutaz FROM sutaz inner join timeline 
+      on sutaz.id_sutaz=timeline.id_sutaz inner join vysledky on 
+      timeline.id_timeline=vysledky.id_timeline inner join tim on 
+      timeline.id_tim_1=tim.id_tim or timeline.id_tim_2=tim.id_tim 
+      where tim.id_tim='${id_tim}' group by sutaz.id_sutaz ORDER by timeline.datum_a_cas desc;`
     );
     return res.status(200).json(results);
   } catch (error) {
