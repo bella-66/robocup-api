@@ -587,11 +587,12 @@ robocupdb.login = async (req, res) => {
 
 robocupdb.updateProfile = async (req, res) => {
   try {
-    const { email, meno, priezvisko, adresa_domu, telefon } = req.body.inputs;
+    const { email, meno, priezvisko, mesto, adresa_domu, psc, telefon } =
+      req.body.inputs;
     const id_osoba = req.body.id_osoba;
     await pool.query(
-      `update osoba set meno=?,priezvisko=?,email=?,adresa_domu=?,telefon=? where id_osoba=?;`,
-      [meno, priezvisko, email, adresa_domu, telefon, id_osoba]
+      `update osoba set meno=?,priezvisko=?,email=?,mesto=?,adresa_domu=?,psc=?,telefon=? where id_osoba=?;`,
+      [meno, priezvisko, email, mesto, adresa_domu, psc, telefon, id_osoba]
     );
     const [results] = await pool.query(
       `SELECT * FROM osoba where id_osoba='${id_osoba}';`
@@ -729,7 +730,9 @@ robocupdb.register = async (req, res, next) => {
     const {
       meno,
       priezvisko,
+      mesto,
       adresa_domu,
+      psc,
       telefon,
       email,
       heslo,
@@ -738,11 +741,13 @@ robocupdb.register = async (req, res, next) => {
       organizacia,
     } = req.body;
     const results = await pool.query(
-      "INSERT INTO osoba (meno,priezvisko,adresa_domu,telefon,email,heslo,rola,datum_narodenia,id_organizacie) VALUES (?,?,?,?,?,?,?,?,?);",
+      "INSERT INTO osoba (meno,priezvisko,mesto,adresa_domu,psc,telefon,email,heslo,rola,datum_narodenia,id_organizacie) VALUES (?,?,?,?,?,?,?,?,?,?,?);",
       [
         meno,
         priezvisko,
+        mesto,
         adresa_domu,
+        psc,
         telefon,
         email,
         heslo,
@@ -755,7 +760,9 @@ robocupdb.register = async (req, res, next) => {
     return res.status(200).json({
       meno,
       priezvisko,
+      mesto,
       adresa_domu,
+      psc,
       telefon,
       email,
       heslo,
@@ -775,7 +782,9 @@ robocupdb.updateUser = async (req, res, next) => {
     const {
       meno,
       priezvisko,
+      mesto,
       adresa_domu,
+      psc,
       telefon,
       email,
       rola,
@@ -784,11 +793,13 @@ robocupdb.updateUser = async (req, res, next) => {
       tim,
     } = req.body[0];
     await pool.query(
-      "UPDATE osoba SET meno=?,priezvisko=?,adresa_domu=?,telefon=?,email=?,rola=?,datum_narodenia=?,id_organizacie=? WHERE id_osoba=?;",
+      "UPDATE osoba SET meno=?,priezvisko=?,mesto=?,adresa_domu=?,psc=?,telefon=?,email=?,rola=?,datum_narodenia=?,id_organizacie=? WHERE id_osoba=?;",
       [
         meno,
         priezvisko,
+        mesto,
         adresa_domu,
+        psc,
         telefon,
         email,
         rola,
