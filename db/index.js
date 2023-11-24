@@ -7,9 +7,6 @@ const pool = mysql.createPool({
   port: process.env.PORTDB,
   user: process.env.USER,
   password: process.env.PASSWORD,
-  // host: "localhost",
-  // database: "robocup",
-  // user: "root",
 });
 
 let robocupdb = {};
